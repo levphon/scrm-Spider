@@ -1,0 +1,29 @@
+{
+  "pageNum": 1,
+  "pageSize": 10,
+  "cusName": null,
+  "cusMobile": null,
+  "cusWxNo": null,
+  "cityId": null,
+  "cusIntention": null,
+  "cusSource": null,
+  "turnType": null,
+  "createBy": null,
+  "createTime": null,
+  "createTimeEnd": null,
+  "orderBy": [
+    {
+      "field": "putPoolTime",
+      "orderByType": "DESC"
+    }
+  ],
+  "tagIds": null,
+  "createByName": null,
+  "ptServerIds": null,
+  "serviceStatus": null,
+  "inputCityId": null,
+  "myDiClue": false,
+  "myFollowClue": false,
+  "optStatus": "ORG_TO_DISTRIBUTE",
+  "newSelect": "N_ALL"
+}
