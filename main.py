@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import datetime
-import json
 import operator
 from time import sleep
 
@@ -8,6 +7,7 @@ import pandas as pd
 import pymysql
 import requests
 
+import json
 from readConfig import ReadConfig
 
 
@@ -21,13 +21,16 @@ def main():
     print('获取分页记录总数：', len(search_lists))
 
     handledCnt = 0
+    failureCnt = 0
     for i in range(len(search_lists)):
         if handledCnt < limit:
-            get_customer_detail(filename, i, search_lists[i]['clueId'])
+            saveFlag = get_customer_detail(filename, i, search_lists[i]['clueId'])
             handledCnt += 1
+            if not saveFlag:
+                failureCnt += 1
             sleep(5)
         else:
-            print("已处理设置总数：", limit)
+            print("已处理设定总数：", limit, "入库失败总数：", failureCnt)
             break
 
 
@@ -223,11 +226,13 @@ def save_data2excel(name: str, new_data: dict):
 
     if is_db_existed(new_data) != True:
         insertSql = new_data['生成sql'][0]
-        save_data2db(insertSql)
+        insertCnt = save_data2db(insertSql)
+        return insertCnt > 0
     else:
         NAME = new_data['姓名'][0]
         MOBILE = new_data['手机号码'][0]
         print("已在库忽略用户信息", NAME, MOBILE)
+        return False
 
 
 def is_db_existed(new_data: dict):
@@ -243,7 +248,7 @@ def is_db_existed(new_data: dict):
         cursor.execute(sql)
         # 获取所有记录列表
         results = cursor.fetchall()
-        print(results)
+        print(NAME, MOBILE, "在库信息：", results)
         cursor.close()
         return len(results) > 0
     except:
@@ -258,9 +263,11 @@ def save_data2db(insertSql: str):
         data = cursor.execute(insertSql)
         db.commit()
         cursor.close()
+        return data
     except pymysql.Error as e:
         print(e)
         print('操作数据库失败')
+        return 0
 
 
 def get_access_token():
