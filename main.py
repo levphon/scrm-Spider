@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
+import json
 import operator
 from time import sleep
 
@@ -7,19 +8,27 @@ import pandas as pd
 import pymysql
 import requests
 
-import json
 from readConfig import ReadConfig
 
 
 def main():
     filename = f'客户信息_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}.xlsx'
 
-    search_lists = get_search_lists(int(config.get_ini("GETDATA", "page")))
+    page = int(config.get_ini("GETDATA", "page"))
+    limit = int(config.get_ini("GETDATA", "total"))
+
+    search_lists = get_search_lists(page)
     print('获取分页记录总数：', len(search_lists))
 
+    handledCnt = 0
     for i in range(len(search_lists)):
-        get_customer_detail(filename, i, search_lists[i]['clueId'])
-        sleep(5)
+        if handledCnt < limit:
+            get_customer_detail(filename, i, search_lists[i]['clueId'])
+            handledCnt += 1
+            sleep(5)
+        else:
+            print("已处理设置总数：", limit)
+            break
 
 
 def get_search_lists(page_num: int):
@@ -54,7 +63,7 @@ def get_customer_detail(filename: str, idx: int, clueId: str):
     # print(response.text)
     rsp_json = json.loads(response.content)
     detail_info = rsp_json['data']
-    print(datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), '获取用户信息：', detail_info)
+    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), '获取用户信息：', detail_info)
 
     info = {
         '用户id': [],
