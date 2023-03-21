@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import datetime
-import json
 import operator
+from time import sleep
 
 import pandas as pd
 import pymysql
 import requests
 
+import json
 from readConfig import ReadConfig
 
 
@@ -17,6 +18,7 @@ def main():
 
     for i in range(len(search_lists)):
         get_customer_detail(filename, i, search_lists[i]['clueId'])
+        sleep(5)
 
 
 def get_search_lists(page_num: int):
