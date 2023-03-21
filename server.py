@@ -73,8 +73,12 @@ def listNewV3():
 def info():
     clueId = flask.request.values.get('clueId')
 
+    filepath = 'json/info1.json'
+    if clueId == '1637757158634442753':
+        filepath = 'json/info2.json'
+
     # 读打开文件
-    with open('json/info.json', encoding='utf-8') as a:
+    with open(filepath, encoding='utf-8') as a:
         # 读取文件
         result = json.load(a)
         print(result)

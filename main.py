@@ -15,6 +15,7 @@ def main():
     filename = f'客户信息_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}.xlsx'
 
     search_lists = get_search_lists(int(config.get_ini("GETDATA", "page")))
+    print('获取分页记录总数：', len(search_lists))
 
     for i in range(len(search_lists)):
         get_customer_detail(filename, i, search_lists[i]['clueId'])
@@ -53,6 +54,7 @@ def get_customer_detail(filename: str, idx: int, clueId: str):
     # print(response.text)
     rsp_json = json.loads(response.content)
     detail_info = rsp_json['data']
+    print(datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), '获取用户信息：', detail_info)
 
     info = {
         '用户id': [],
@@ -91,11 +93,11 @@ def get_customer_detail(filename: str, idx: int, clueId: str):
 
     loanIntentionLoanAmount = int(detail_info['loanIntention']['loanAmount'])
     if loanIntentionLoanAmount >= 200000:
-        loanAmount = 200000
+        loanAmount = '20万'
     elif loanIntentionLoanAmount >= 100000 and loanIntentionLoanAmount < 200000:
-        loanAmount = 150000
+        loanAmount = '10-20万'
     else:
-        loanAmount = 80000
+        loanAmount = '5-10万'
 
     info['金额'].append(loanAmount)
 
@@ -213,6 +215,10 @@ def save_data2excel(name: str, new_data: dict):
     if is_db_existed(new_data) != True:
         insertSql = new_data['生成sql'][0]
         save_data2db(insertSql)
+    else:
+        NAME = new_data['姓名'][0]
+        MOBILE = new_data['手机号码'][0]
+        print("已在库忽略用户信息", NAME, MOBILE)
 
 
 def is_db_existed(new_data: dict):
