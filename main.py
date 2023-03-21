@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
+import json
 import operator
 from time import sleep
 
@@ -7,7 +8,6 @@ import pandas as pd
 import pymysql
 import requests
 
-import json
 from readConfig import ReadConfig
 
 
@@ -188,7 +188,7 @@ def get_customer_detail(filename: str, idx: int, clueId: str):
     info['生成sql'].append(
         f"""INSERT INTO `user_aptitude`(`USER_ID`,`NAME`,`MOBILE`,`CITY`,`LOAN_AMOUNT`,`CREDIT_CARD`,`PUBLIC_FUND`,`CAR`,`HOUSE`,`HOUSE_EXTENSION`,`INSURANCE`,`GETWAY_INCOME`,`LEVEL`,`CREATE_BY`,`AGE`,`GENDER`,`CHANNEL`,`MOBILE_LOCATION`,`IP_LOCATION`,`IN_CITY`,`MD5`,`TYPE`,`EXTENSION`) VALUES ('{USER_ID}','{NAME}','{MOBILE}','{CITY}','{LOAN_AMOUNT}','{CREDIT_CARD}','{PUBLIC_FUND}','{CAR}','{HOUSE}','{HOUSE_EXTENSION}','{INSURANCE}','{GETWAY_INCOME}','{LEVEL}','{CREATE_BY}','{AGE}','{GENDER}','{CHANNEL}','{MOBILE_LOCATION}','{IP_LOCATION}','{IN_CITY}','{MD5}','{TYPE}','{EXTENSION}');""")
 
-    save_data2excel(filename, pd.DataFrame(info))
+    return save_data2excel(filename, pd.DataFrame(info))
 
 
 def save_data2excel(name: str, new_data: dict):
