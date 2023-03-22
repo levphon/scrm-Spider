@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import operator
+from time import sleep
 
 import pandas as pd
 import pymysql
@@ -52,7 +53,7 @@ def get_search_lists(filename: str, page_num: int, limit: int):
                 handledCnt += 1
                 if saveFlag:
                     successCnt += 1
-                # sleep(5)
+                sleep(5)
                 print(f"[+] 第{i}条处理完毕...\n")
             else:
                 # 跳出处理循环
@@ -293,7 +294,7 @@ if __name__ == '__main__':
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
                       "Chrome/54.0.2840.99 Safari/537.36",
-        "Content-Type": "application/json; charset=UTF-8",
+        "Content-Type": "application/json; charset=UTF-8",  # application/x-www-form-urlencoded
         'Authorization': 'Bearer {}'.format(get_authorization)
     }
 
