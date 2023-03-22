@@ -1,62 +1,68 @@
 # -*- coding: utf-8 -*-
 import datetime
-import json
 import operator
-from time import sleep
 
 import pandas as pd
 import pymysql
 import requests
 
+import json
 from readConfig import ReadConfig
 
 
 def main():
     filename = f'客户信息_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}.xlsx'
-
     page = int(config.get_ini("GETDATA", "page"))
     limit = int(config.get_ini("GETDATA", "total"))
 
-    search_lists = get_search_lists(page)
-    print('获取分页记录总数：', len(search_lists))
-
-    handledCnt = 0
-    failureCnt = 0
-    for i in range(len(search_lists)):
-        if handledCnt < limit:
-            saveFlag = get_customer_detail(filename, i, search_lists[i]['clueId'])
-            handledCnt += 1
-            if not saveFlag:
-                failureCnt += 1
-            sleep(5)
-        else:
-            print("已处理设定总数：", limit, "入库失败总数：", failureCnt)
-            break
+    get_search_lists(filename, page, limit)
 
 
-def get_search_lists(page_num: int):
-    items = []
-
+def get_search_lists(filename: str, page_num: int, limit: int):
     api = config.get_ini("API", "api_url")
     url = f"{api}/clue/listNewV3"
 
     params = {
-        "pageNum": 1, "pageSize": 10,
-        "orderBy": [{"field": "putPoolTime", "orderByType": "DESC"}],
+        "pageNum": 1, "pageSize": 10, "orderBy": [{"field": "putPoolTime", "orderByType": "DESC"}],
         "myDiClue": False, "myFollowClue": False, "optStatus": "ORG_TO_DISTRIBUTE", "newSelect": "N_ALL"
     }
 
+    handledCnt = 0
+    successCnt = 0
+
     for page in range(page_num):
-        print(f"[+] 正在爬取第{page + 1}页.")
-        params['pageNum'] = page + 1
+        pageNum = page + 1
+        pageSize = params['pageSize']
+
+        print(f"[+] 正在爬取##################################第 {pageNum} 页#####################################")
+        params['pageNum'] = pageNum
         response = requests.get(url, params=params, headers=headers)
         # print(response.text)
         rsp_json = json.loads(response.content)
 
         data_list = rsp_json['data']['list']
-        for item in data_list:
-            items.append(item)
-    return items
+        print('第', pageNum, '页获取记录数：', len(data_list))
+
+        for i in range(len(data_list)):
+            recordNum = (pageSize * page) + (i + 1)
+            item = data_list[i]
+            if handledCnt < limit:
+                print(f"[+] 开始处理第{i}条...")
+                saveFlag = get_customer_detail(filename, recordNum, item['clueId'])
+                handledCnt += 1
+                if saveFlag:
+                    successCnt += 1
+                # sleep(5)
+                print(f"[+] 第{i}条处理完毕...\n")
+            else:
+                # 跳出处理循环
+                break
+
+        # 跳出分页循环
+        if handledCnt >= limit:
+            break
+
+        print("已处理总数：", handledCnt, "入库总数：", successCnt)
 
 
 def get_customer_detail(filename: str, idx: int, clueId: str):
@@ -95,7 +101,7 @@ def get_customer_detail(filename: str, idx: int, clueId: str):
         '生成sql': [],
     }
 
-    info['用户id'].append(detail_info['customer']['id'])
+    info['用户id'].append(idx)
     info['姓名'].append(detail_info['customer']['name'])
     info['手机号码'].append(detail_info['customer']['mobile'])
 
@@ -221,18 +227,23 @@ def save_data2excel(name: str, new_data: dict):
             '类型': [],
             '生成sql': [],
         })
+
+    # 存储到Excel
     save = pd.concat([data, new_data], axis=0)
     save.to_excel(name, index=False)
 
-    if is_db_existed(new_data) != True:
-        insertSql = new_data['生成sql'][0]
-        insertCnt = save_data2db(insertSql)
-        return insertCnt > 0
-    else:
-        NAME = new_data['姓名'][0]
-        MOBILE = new_data['手机号码'][0]
-        print("已在库忽略用户信息", NAME, MOBILE)
-        return False
+    # 存储到数据库
+    store_database_sw = config.get_ini("GETSW", "store_database")
+    if store_database_sw == 'true':
+        if not is_db_existed(new_data):
+            insertSql = new_data['生成sql'][0]
+            insertCnt = save_data2db(insertSql)
+            return insertCnt > 0
+        else:
+            NAME = new_data['姓名'][0]
+            MOBILE = new_data['手机号码'][0]
+            print("已在库忽略用户信息", NAME, MOBILE)
+            return False
 
 
 def is_db_existed(new_data: dict):
